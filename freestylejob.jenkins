@@ -1,0 +1,55 @@
+#this is  freestyle job
+ssh-agent bash -c 'ssh-add /var/lib/jenkins/.ssh/raws-key.pem && \
+rsync -avz --delete -e "ssh" ${WORKSPACE}/ chatapp@18.0.217.183:/app'
+ssh -i /var/lib/jenkins/.ssh/raws-key.pem ubuntu@18.0.217.183 << 'EOF'
+  # Install Python and development packages
+  #sudo apt-get update
+  #sudo apt-get install -y python3 python3-pip python3-dev default-libmysqlclient-dev build-essential
+   #Install Python virtual environment package
+  #sudo pip3 install virtualenv
+  whoami
+  # Add application user chatapp and set permissions
+  sudo chown chatapp:chatapp -R /app
+  # Switch to chatapp user and create virtual environment
+  sudo -u chatapp bash << 'EOF'
+    cd /app
+    whoami
+    virtualenv -p /usr/bin/python3 venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    pip install mysqlclient
+    whoami
+export CHATDB='chatapp'
+export CHATDBUSER='chatapp'
+export CHATDBPASSWORD='@shokNEHA123'
+export CHATDBHOST='18.0.242.124'
+
+ python3 /app/fundoo/manage.py makemigrations
+ python3 /app/fundoo/manage.py migrate
+     source /etc/bash.bashrc
+   curl http://localhost:8000
+  sudo systemctl daemon-reload
+  sudo systemctl enable chatapp.service
+  sudo systemctl start chatapp.service
+    deactivate
+  EOF
+
+  # Edit Django settings to use environment variables
+  #sudo sed -i "s/ENGINE': 'django.db.backends.sqlite3/ENGINE': 'django.db.backends.mysql/" /app/fundoo/fundoo/settings.py
+ # sudo sed -i "/DATABASES = {/a \\
+#DATABASES = { 'default': { \\
+#'ENGINE': 'django.db.backends.mysql', \\
+#'NAME': os.environ.get('CHATDB'), \\
+#'USER': os.environ.get('CHATDBUSER'), \\
+#'PASSWORD': os.environ.get('CHATDBPASSWORD'), \\
+#'HOST': os.environ.get('CHATDBHOST'), \\
+#'PORT': '3306', } \\
+#}" /app/fundoo/fundoo/settings.py
+
+  # Set environment variables in /etc/bash.bashrc
+  #echo "export CHATDB='chatapp'" | sudo tee -a /etc/bash.bashrc
+  #echo "export CHATDBUSER='your_db_user'" | sudo tee -a /etc/bash.bashrc
+  #echo "export CHATDBPASSWORD='your_db_password'" | sudo tee -a /etc/bash.bashrc
+  #echo "export CHATDBHOST='localhost'" | sudo tee -a /etc/bash.bashrc
+  ls -lrt /app
+EOF
